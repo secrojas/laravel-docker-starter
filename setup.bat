@@ -30,8 +30,9 @@ if not exist "composer.json" (
     docker-compose exec app composer create-project laravel/laravel . --prefer-dist
 
     echo.
-    echo 📝 Updating .env with Docker settings...
-    docker-compose exec app cp .env.example .env
+    echo 📝 Copying Docker .env configuration...
+    REM Copy our .env from host to container (overwrites Laravel's .env.example)
+    docker cp .env laravel_app:/var/www/.env
 
     echo.
     echo 🔑 Generating application key...
@@ -46,7 +47,8 @@ if not exist "composer.json" (
     docker-compose exec app composer install
 
     if not exist ".env" (
-        docker-compose exec app cp .env.example .env
+        echo 📝 Copying Docker .env configuration...
+        docker cp .env laravel_app:/var/www/.env
         docker-compose exec app php artisan key:generate
     )
 

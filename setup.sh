@@ -31,8 +31,9 @@ if [ ! -f "composer.json" ]; then
     docker-compose exec app composer create-project laravel/laravel . --prefer-dist
 
     echo ""
-    echo "📝 Updating .env with Docker settings..."
-    docker-compose exec app cp .env.example .env
+    echo "📝 Copying Docker .env configuration..."
+    # Copy our .env from host to container (overwrites Laravel's .env.example)
+    docker cp .env laravel_app:/var/www/.env
 
     echo ""
     echo "🔑 Generating application key..."
@@ -47,7 +48,8 @@ else
     docker-compose exec app composer install
 
     if [ ! -f ".env" ]; then
-        docker-compose exec app cp .env.example .env
+        echo "📝 Copying Docker .env configuration..."
+        docker cp .env laravel_app:/var/www/.env
         docker-compose exec app php artisan key:generate
     fi
 
