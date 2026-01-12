@@ -3,43 +3,43 @@
 set -e  # Exit on error
 
 echo "========================================"
-echo "🚀 Laravel Docker Starter - Setup Script"
+echo "Laravel Docker Starter - Setup Script"
 echo "========================================"
 echo ""
 
 # Check Docker is running
 if ! docker info > /dev/null 2>&1; then
-    echo "❌ Error: Docker is not running. Please start Docker and try again."
+    echo "[ERROR] Docker is not running. Please start Docker and try again."
     echo ""
     exit 1
 fi
 
 # Check if .env exists
 if [ ! -f ".env" ]; then
-    echo "📝 Creating .env file from .env.example..."
+    echo "[SETUP] Creating .env file from .env.example..."
     cp .env.example .env
     if [ $? -ne 0 ]; then
-        echo "❌ Error: Could not create .env file"
+        echo "[ERROR] Could not create .env file"
         exit 1
     fi
-    echo "✅ .env file created successfully"
+    echo "[OK] .env file created successfully"
 else
-    echo "ℹ️  .env file already exists, using existing configuration"
+    echo "[INFO] .env file already exists, using existing configuration"
 fi
 
 echo ""
-echo "📦 Building Docker containers (this may take a few minutes on first run)..."
+echo "[BUILD] Building Docker containers (this may take a few minutes on first run)..."
 if ! docker-compose build; then
-    echo "❌ Error: Failed to build Docker containers"
+    echo "[ERROR] Failed to build Docker containers"
     echo "Please check the error messages above"
     exit 1
 fi
 
 echo ""
-echo "🔧 Starting containers..."
-if ! docker-compose up -d; then
+echo "[START] Starting containers..."
+if ! docker-compose up -d > /dev/null 2>&1; then
     echo ""
-    echo "❌ Error: Failed to start containers"
+    echo "[ERROR] Failed to start containers"
     echo ""
     echo "Common issues:"
     echo "  - Port conflicts (MySQL on 3306, Redis on 6379, etc.)"
@@ -55,9 +55,10 @@ if ! docker-compose up -d; then
     docker-compose logs
     exit 1
 fi
+echo "[OK] Containers started successfully"
 
 echo ""
-echo "⏳ Waiting for containers to be ready..."
+echo "[WAIT] Waiting for containers to be ready..."
 sleep 5
 
 # Check if app container is running

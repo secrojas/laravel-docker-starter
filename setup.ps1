@@ -53,7 +53,7 @@ Write-Host "[OK] Containers built successfully" -ForegroundColor Green
 # Start containers
 Write-Host ""
 Write-Host "[START] Starting containers..." -ForegroundColor Yellow
-docker-compose up -d
+docker-compose up -d 2>&1 | Out-Null
 if ($LASTEXITCODE -ne 0) {
     Write-Host ""
     Write-Host "[ERROR] Failed to start containers" -ForegroundColor Red

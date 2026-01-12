@@ -41,7 +41,7 @@ if errorlevel 1 (
 
 echo.
 echo [START] Starting containers...
-docker-compose up -d
+docker-compose up -d >nul 2>&1
 if errorlevel 1 (
     echo.
     echo [ERROR] Failed to start containers
@@ -61,6 +61,7 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+echo [OK] Containers started successfully
 
 echo.
 echo [WAIT] Waiting for containers to be ready...
