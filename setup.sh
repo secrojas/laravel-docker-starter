@@ -36,42 +36,29 @@ if ! docker-compose build; then
 fi
 
 echo ""
-echo "[START] Starting containers..."
-if ! docker-compose up -d > /dev/null 2>&1; then
-    echo ""
-    echo "[ERROR] Failed to start containers"
-    echo ""
-    echo "Common issues:"
-    echo "  - Port conflicts (MySQL on 3306, Redis on 6379, etc.)"
-    echo "  - Check if ports 8000, 3307, 6380, 8025, 1025 are available"
-    echo ""
-    echo "To fix port conflicts:"
-    echo "  1. Stop services using these ports (e.g., local MySQL, Redis)"
-    echo "  2. Or change ports in .env file:"
-    echo "     APP_PORT=8001"
-    echo "     DB_PORT=3308"
-    echo "     REDIS_PORT=6381"
-    echo ""
-    docker-compose logs
-    exit 1
-fi
-echo "[OK] Containers started successfully"
+echo "[START] Starting containers (this may take 30-60 seconds)..."
+docker-compose up -d > /dev/null 2>&1
+echo "[OK] Docker Compose command completed"
 
 echo ""
-echo "[WAIT] Waiting for containers to be ready..."
-sleep 5
+echo "[WAIT] Waiting for containers to start (10 seconds)..."
+sleep 10
 
 # Check if app container is running
 if ! docker-compose ps | grep "laravel_app" | grep -q "Up"; then
-    echo "❌ Error: App container is not running"
+    echo "[ERROR] App container is not running"
     echo ""
-    echo "Showing container logs:"
-    docker-compose logs app
+    echo "Checking what went wrong:"
+    docker-compose ps
+    echo ""
+    echo "Common issues:"
+    echo "  - Port conflicts (check if ports 8000, 3307, 6380, 8025 are in use)"
+    echo "  - Run: docker-compose logs to see detailed errors"
     echo ""
     exit 1
 fi
 
-echo "✅ Containers are running"
+echo "[OK] App container is running"
 
 echo ""
 echo "⏳ Waiting for MySQL to be fully ready (this may take 10-30 seconds)..."

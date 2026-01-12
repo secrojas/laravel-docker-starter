@@ -52,42 +52,26 @@ Write-Host "[OK] Containers built successfully" -ForegroundColor Green
 
 # Start containers
 Write-Host ""
-Write-Host "[START] Starting containers..." -ForegroundColor Yellow
+Write-Host "[START] Starting containers (this may take 30-60 seconds)..." -ForegroundColor Yellow
 docker-compose up -d 2>&1 | Out-Null
-if ($LASTEXITCODE -ne 0) {
-    Write-Host ""
-    Write-Host "[ERROR] Failed to start containers" -ForegroundColor Red
-    Write-Host ""
-    Write-Host "Common issues:" -ForegroundColor Yellow
-    Write-Host "  - Port conflicts (MySQL on 3306, Redis on 6379, etc.)" -ForegroundColor Yellow
-    Write-Host "  - Check if ports 8000, 3307, 6380, 8025, 1025 are available" -ForegroundColor Yellow
-    Write-Host ""
-    Write-Host "To fix port conflicts:" -ForegroundColor Yellow
-    Write-Host "  1. Stop services using these ports (e.g., local MySQL, Redis)" -ForegroundColor Yellow
-    Write-Host "     net stop MySQL80" -ForegroundColor Yellow
-    Write-Host "  2. Or change ports in .env file:" -ForegroundColor Yellow
-    Write-Host "     APP_PORT=8001" -ForegroundColor Yellow
-    Write-Host "     DB_PORT=3308" -ForegroundColor Yellow
-    Write-Host "     REDIS_PORT=6381" -ForegroundColor Yellow
-    Write-Host ""
-    docker-compose logs
-    Read-Host "Press Enter to exit"
-    exit 1
-}
-Write-Host "[OK] Containers started successfully" -ForegroundColor Green
+Write-Host "[OK] Docker Compose command completed" -ForegroundColor Green
 
 # Wait for containers to be ready
 Write-Host ""
-Write-Host "[WAIT] Waiting for containers to be ready..." -ForegroundColor Yellow
-Start-Sleep -Seconds 5
+Write-Host "[WAIT] Waiting for containers to start (10 seconds)..." -ForegroundColor Yellow
+Start-Sleep -Seconds 10
 
 # Check if app container is running
 $appStatus = docker-compose ps | Select-String "laravel_app" | Select-String "Up"
 if (-not $appStatus) {
     Write-Host "[ERROR] App container is not running" -ForegroundColor Red
     Write-Host ""
-    Write-Host "Showing container logs:" -ForegroundColor Yellow
-    docker-compose logs app
+    Write-Host "Checking what went wrong:" -ForegroundColor Yellow
+    docker-compose ps
+    Write-Host ""
+    Write-Host "Common issues:" -ForegroundColor Yellow
+    Write-Host "  - Port conflicts (check if ports 8000, 3307, 6380, 8025 are in use)" -ForegroundColor Yellow
+    Write-Host "  - Run: docker-compose logs to see detailed errors" -ForegroundColor Yellow
     Write-Host ""
     Read-Host "Press Enter to exit"
     exit 1
