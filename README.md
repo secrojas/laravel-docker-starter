@@ -12,6 +12,44 @@ Complete Docker Compose setup for Laravel with Nginx, MySQL 8.0, Redis, and Mail
 
 ---
 
+## 📋 Prerequisites
+
+Before starting, make sure you have:
+
+- **Docker Desktop** installed and running
+  - Windows: [Docker Desktop for Windows](https://www.docker.com/products/docker-desktop)
+  - Mac: [Docker Desktop for Mac](https://www.docker.com/products/docker-desktop)
+  - Linux: [Docker Engine](https://docs.docker.com/engine/install/)
+- **Git** (optional, for cloning the repository)
+- **Available ports**: 8000, 3307, 6380, 8025, 1025
+  - ⚠️ **Important**: If you have local MySQL (port 3306), Redis, or other services running, they won't conflict as this setup uses different ports by default
+  - If ports 8000, 3307, 6380, 8025, or 1025 are in use, you can change them in the `.env` file
+
+### Port Conflicts
+
+If you encounter port conflict errors, you have two options:
+
+**Option 1: Stop conflicting services (recommended for clean setup)**
+```bash
+# Windows - Stop MySQL service (if you have local MySQL)
+net stop MySQL80
+
+# Linux/Mac - Stop MySQL
+sudo systemctl stop mysql
+# or
+sudo service mysql stop
+```
+
+**Option 2: Change ports in `.env` file**
+```env
+APP_PORT=8001        # Change from 8000
+DB_PORT=3308         # Change from 3307
+REDIS_PORT=6381      # Change from 6380
+MAILHOG_UI_PORT=8026 # Change from 8025
+```
+
+---
+
 ## 📦 What's Included
 
 ### Tech Stack
@@ -39,50 +77,71 @@ Complete Docker Compose setup for Laravel with Nginx, MySQL 8.0, Redis, and Mail
 
 ## 🚀 Quick Start
 
-### Option 1: Using Pre-built Docker Image (Fastest)
+### Option 1: Clone Repository (Recommended)
 
-Pull the image directly from Docker Hub and get started in seconds:
-
+**Linux/Mac:**
 ```bash
-# Create project directory
-mkdir my-laravel-app && cd my-laravel-app
-
-# Download docker-compose configuration
-curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/docker-compose.yml
-curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/.env.example
-cp .env.example .env
-
-# Download setup scripts
-curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/setup.sh
-curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/setup.bat
-
-# Run setup (Linux/Mac)
-chmod +x setup.sh && ./setup.sh
-
-# Or run setup (Windows)
-setup.bat
-```
-
-Your application will be running at:
-- **Laravel App:** http://localhost:8000
-- **Mailhog UI:** http://localhost:8025
-
-### Option 2: Clone Repository
-
-Clone the entire repository to start a new project:
-
-```bash
-# Clone repository
+# 1. Clone repository
 git clone https://github.com/secrojas/laravel-docker-starter.git my-project
 cd my-project
 
-# Run automated setup
-# Linux/Mac:
+# 2. Make setup script executable and run it
 chmod +x setup.sh
 ./setup.sh
 
-# Windows:
-setup.bat
+# 3. Wait for completion and visit http://localhost:8000
+```
+
+**Windows (PowerShell or CMD):**
+```powershell
+# 1. Clone repository
+git clone https://github.com/secrojas/laravel-docker-starter.git my-project
+cd my-project
+
+# 2. Run setup script with .\ prefix
+.\setup.bat
+
+# 3. Wait for completion and visit http://localhost:8000
+```
+
+**Note for Windows users:**
+- You **must** use `.\setup.bat` (with `.\` prefix) to run the script
+- Make sure Docker Desktop is running before executing the script
+- If you see encoding issues, the script will still work correctly
+
+### Option 2: Using Pre-built Docker Image (Fastest)
+
+Pull the image directly from Docker Hub and get started in seconds:
+
+**Linux/Mac:**
+```bash
+# Create and enter project directory
+mkdir my-laravel-app && cd my-laravel-app
+
+# Download configuration files
+curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/.env.example
+curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/setup.sh
+cp .env.example .env
+
+# Run setup
+chmod +x setup.sh && ./setup.sh
+```
+
+**Windows (PowerShell):**
+```powershell
+# Create and enter project directory
+mkdir my-laravel-app
+cd my-laravel-app
+
+# Download configuration files
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/docker-compose.yml" -OutFile "docker-compose.yml"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/.env.example" -OutFile ".env.example"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/setup.bat" -OutFile "setup.bat"
+Copy-Item .env.example .env
+
+# Run setup
+.\setup.bat
 ```
 
 ### Option 3: Manual Setup
@@ -95,28 +154,49 @@ git clone https://github.com/secrojas/laravel-docker-starter.git my-project
 cd my-project
 
 # 2. Copy environment file
-cp .env.example .env
+cp .env.example .env  # Windows: copy .env.example .env
 
 # 3. Build and start containers
 docker-compose build
 docker-compose up -d
 
-# 4. Wait for MySQL to be ready (10-15 seconds)
-sleep 15
+# 4. Wait for MySQL to be ready (30 seconds recommended)
+# Linux/Mac:
+until docker-compose exec -T mysql mysql -uroot -proot -e "SELECT 1" > /dev/null 2>&1; do sleep 1; done
+# Windows: wait 30 seconds manually or check logs with: docker-compose logs mysql
 
-# 5. Install Laravel
-docker-compose exec app composer create-project laravel/laravel . --prefer-dist
+# 5. Install Composer dependencies (Laravel is already in the project)
+docker-compose exec -T app composer install --no-interaction
 
-# 6. Configure Laravel environment
-docker-compose exec app cp .env.example .env
-docker-compose exec app php artisan key:generate
+# 6. Generate application key
+docker-compose exec -T app php artisan key:generate --force
 
 # 7. Run migrations
-docker-compose exec app php artisan migrate
+docker-compose exec -T app php artisan migrate --force
 
-# 8. Set permissions
-docker-compose exec app chmod -R 777 storage bootstrap/cache
+# 8. Set permissions (Linux/Mac only, not needed on Windows)
+docker-compose exec -T app chmod -R 777 storage bootstrap/cache
 ```
+
+### What Happens During Setup?
+
+The setup script will:
+1. ✅ Check if Docker is running
+2. ✅ Create `.env` file from `.env.example`
+3. ✅ Build Docker containers (first run takes 3-5 minutes)
+4. ✅ Start all services (MySQL, Redis, Nginx, PHP-FPM, Mailhog)
+5. ✅ Wait for MySQL to be fully ready
+6. ✅ Install Laravel and Composer dependencies
+7. ✅ Generate application key
+8. ✅ Run database migrations
+9. ✅ Set proper permissions
+
+### After Setup
+
+Your application will be running at:
+- **Laravel App:** http://localhost:8000
+- **Mailhog UI:** http://localhost:8025 (email testing)
+- **MySQL:** localhost:3307 (use DBeaver, MySQL Workbench, etc.)
 
 ---
 
@@ -463,30 +543,154 @@ server {
 
 ## 🐛 Troubleshooting
 
-### Port Already in Use
+### Port Already in Use (Most Common Issue)
 
-If you see port conflict errors:
-
-```bash
-Error: bind: address already in use
+**Error message:**
+```
+Error response from daemon: ports are not available: exposing port TCP 0.0.0.0:3306
+bind: Solo se permite un uso de cada dirección de socket
 ```
 
-**Solution:** Change ports in `.env` file:
+**This happens when:** Your local MySQL, Redis, or other services are using the same ports.
 
+**Solution 1: Stop conflicting services (recommended)**
+```bash
+# Windows - Stop MySQL
+net stop MySQL80
+# or check running services
+netstat -ano | findstr :3306
+netstat -ano | findstr :6379
+
+# Linux/Mac - Stop MySQL
+sudo systemctl stop mysql
+# or
+sudo service mysql stop
+
+# Check what's using a port
+lsof -i :3306
+lsof -i :6379
+```
+
+**Solution 2: Change ports in `.env` file**
 ```env
-APP_PORT=8001  # Instead of 8000
-DB_PORT=3308   # Instead of 3307
+APP_PORT=8001        # Instead of 8000
+DB_PORT=3308         # Instead of 3307
+REDIS_PORT=6381      # Instead of 6380
+MAILHOG_UI_PORT=8026 # Instead of 8025
+MAILHOG_SMTP_PORT=1026 # Instead of 1025
+```
+
+After changing ports:
+```bash
+docker-compose down
+docker-compose up -d
+```
+
+### Setup Script Command Not Found (Windows)
+
+**Error:** `'setup.bat' is not recognized as an internal or external command`
+
+**Solution:** On Windows, you must use `.\setup.bat` (with `.\` prefix)
+```powershell
+# Correct:
+.\setup.bat
+
+# Wrong:
+setup.bat
+```
+
+### Service "app" is Not Running
+
+**Error message:**
+```
+service "app" is not running
+```
+
+**This happens when:** The app container failed to start, usually due to port conflicts or build errors.
+
+**Solution:**
+1. Check which containers are running:
+```bash
+docker-compose ps
+```
+
+2. Check logs for errors:
+```bash
+docker-compose logs app
+docker-compose logs mysql
+docker-compose logs nginx
+```
+
+3. If port conflict, see "Port Already in Use" section above
+
+4. If build error, rebuild:
+```bash
+docker-compose down
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+### Vendor/autoload.php Not Found
+
+**Error message:**
+```
+Warning: require(/var/www/public/../vendor/autoload.php): Failed to open stream: No such file or directory
+Fatal error: Failed opening required '/var/www/public/../vendor/autoload.php'
+```
+
+**This happens when:** Composer dependencies were not installed properly.
+
+**Solution:**
+1. Check if container is running:
+```bash
+docker-compose ps
+```
+
+2. Install dependencies manually:
+```bash
+docker-compose exec -T app composer install --no-interaction
+```
+
+3. If that fails, enter the container and check:
+```bash
+docker-compose exec app bash
+ls -la /var/www/
+composer install
+```
+
+4. Make sure the setup script completed successfully. If it failed midway, run it again:
+```bash
+.\setup.bat  # Windows
+./setup.sh   # Linux/Mac
+```
+
+### Docker Compose Version Warning
+
+**Warning message:**
+```
+level=warning msg="docker-compose.yml: the attribute `version` is obsolete"
+```
+
+**This is safe to ignore.** The warning appears because Docker Compose V2 no longer requires the `version` attribute. The latest version of this project has this fixed, but if you see it, it won't affect functionality.
+
+**To fix:** Update the project files:
+```bash
+git pull origin main
+# or download the latest docker-compose.yml
 ```
 
 ### Permission Denied Errors
 
+**Linux/Mac:**
 ```bash
 docker-compose exec app chmod -R 777 storage bootstrap/cache
 ```
 
+**Windows:** Permission errors are usually not an issue on Windows with Docker Desktop.
+
 ### Container Won't Start
 
-Check logs:
+Check logs for specific errors:
 
 ```bash
 docker-compose logs -f
@@ -502,35 +706,111 @@ docker-compose up -d
 
 ### MySQL Connection Refused
 
-MySQL takes a few seconds to fully start. Wait 10-15 seconds after `docker-compose up` before running migrations.
+**Error:** `SQLSTATE[HY000] [2002] Connection refused`
 
-Check MySQL is ready:
+**This happens when:** MySQL is still starting up (takes 10-30 seconds on first run).
 
+**Solution:**
+1. Wait for MySQL to be ready:
 ```bash
+# Check MySQL logs
 docker-compose logs mysql | grep "ready for connections"
+
+# Or wait until you see "ready for connections" twice (MySQL 8.0 restarts once)
+```
+
+2. The setup script now waits automatically, but if running manual commands, wait 30 seconds:
+```bash
+# Linux/Mac
+until docker-compose exec -T mysql mysql -uroot -proot -e "SELECT 1" > /dev/null 2>&1; do sleep 1; done
+
+# Windows
+timeout /t 30 /nobreak
 ```
 
 ### Laravel Shows 500 Error
 
-1. Check `.env` file exists and has `APP_KEY` set
-2. Check storage permissions
-3. Check logs:
+1. Check `.env` file exists and has `APP_KEY` set:
+```bash
+docker-compose exec app php artisan key:generate --force
+```
 
+2. Check storage permissions (Linux/Mac):
+```bash
+docker-compose exec app chmod -R 777 storage bootstrap/cache
+```
+
+3. Check logs:
 ```bash
 docker-compose logs -f app
 docker-compose exec app tail -f storage/logs/laravel.log
 ```
 
+4. Clear caches:
+```bash
+docker-compose exec app php artisan config:clear
+docker-compose exec app php artisan cache:clear
+docker-compose exec app php artisan route:clear
+docker-compose exec app php artisan view:clear
+```
+
+### Setup Script Hangs or Fails
+
+1. Make sure Docker Desktop is running
+2. Check if you have enough disk space (Docker needs at least 10GB)
+3. Check your internet connection (downloads images and Composer packages)
+4. Try running setup again - it's safe to run multiple times
+5. Check logs for specific errors:
+```bash
+docker-compose logs
+```
+
 ### Clear Everything and Start Over
+
+If nothing works, start completely fresh:
 
 ```bash
 # WARNING: This deletes all data!
+
+# Stop and remove containers, volumes, and networks
 docker-compose down -v
-rm -rf vendor node_modules
+
+# Remove local files (be careful with this!)
+# Windows (PowerShell)
+Remove-Item -Recurse -Force vendor, node_modules, .env -ErrorAction SilentlyContinue
+
+# Linux/Mac
+rm -rf vendor node_modules .env
+
+# Rebuild everything
 docker-compose build --no-cache
 docker-compose up -d
-./setup.sh  # or setup.bat on Windows
+
+# Run setup again
+.\setup.bat  # Windows
+./setup.sh   # Linux/Mac
 ```
+
+### Getting Help
+
+If you still have issues:
+
+1. Check container status:
+```bash
+docker-compose ps
+```
+
+2. Check all logs:
+```bash
+docker-compose logs
+```
+
+3. Create an issue on GitHub with:
+   - Your operating system
+   - Docker version (`docker --version`)
+   - Docker Compose version (`docker-compose --version`)
+   - Error messages from logs
+   - Output of `docker-compose ps`
 
 ---
 
