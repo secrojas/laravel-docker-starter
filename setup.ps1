@@ -27,11 +27,15 @@ Write-Host "[4/6] Waiting 30 seconds for containers to initialize..." -Foregroun
 Start-Sleep -Seconds 30
 
 # Install composer dependencies
-Write-Host "[5/6] Installing dependencies (this takes 2-3 minutes)..." -ForegroundColor Yellow
+Write-Host "[5/7] Installing dependencies (this takes 2-3 minutes)..." -ForegroundColor Yellow
 docker-compose exec -T app composer install --no-interaction --quiet
 
+# Generate application key
+Write-Host "[6/7] Generating application key..." -ForegroundColor Yellow
+docker-compose exec -T app php artisan key:generate --force
+
 # Run migrations
-Write-Host "[6/6] Running migrations..." -ForegroundColor Yellow
+Write-Host "[7/7] Running migrations..." -ForegroundColor Yellow
 docker-compose exec -T app php artisan migrate --force 2>&1 | Out-Null
 
 Write-Host ""
