@@ -92,22 +92,36 @@ chmod +x setup.sh
 # 3. Wait for completion and visit http://localhost:8000
 ```
 
-**Windows (PowerShell or CMD):**
+**Windows - PowerShell (Recommended):**
 ```powershell
 # 1. Clone repository
 git clone https://github.com/secrojas/laravel-docker-starter.git my-project
 cd my-project
 
-# 2. Run setup script with .\ prefix
+# 2. Run PowerShell setup script
+.\setup.ps1
+
+# 3. Wait for completion and visit http://localhost:8000
+```
+
+**Windows - CMD:**
+```cmd
+# 1. Clone repository
+git clone https://github.com/secrojas/laravel-docker-starter.git my-project
+cd my-project
+
+# 2. Run batch setup script
 .\setup.bat
 
 # 3. Wait for completion and visit http://localhost:8000
 ```
 
 **Note for Windows users:**
-- You **must** use `.\setup.bat` (with `.\` prefix) to run the script
+- **PowerShell users:** Use `.\setup.ps1` (recommended for better output and error handling)
+- **CMD users:** Use `.\setup.bat`
+- You **must** use `.\` prefix to run the scripts
 - Make sure Docker Desktop is running before executing the script
-- If you see encoding issues, the script will still work correctly
+- If using PowerShell and you see an execution policy error, run: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
 
 ### Option 2: Using Pre-built Docker Image (Fastest)
 
@@ -137,8 +151,24 @@ cd my-laravel-app
 # Download configuration files
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/docker-compose.yml" -OutFile "docker-compose.yml"
 Invoke-WebRequest -Uri "https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/.env.example" -OutFile ".env.example"
-Invoke-WebRequest -Uri "https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/setup.bat" -OutFile "setup.bat"
+Invoke-WebRequest -Uri "https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/setup.ps1" -OutFile "setup.ps1"
 Copy-Item .env.example .env
+
+# Run setup
+.\setup.ps1
+```
+
+**Windows (CMD):**
+```cmd
+# Create and enter project directory
+mkdir my-laravel-app
+cd my-laravel-app
+
+# Download configuration files
+curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/docker-compose.yml
+curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/.env.example
+curl -O https://raw.githubusercontent.com/secrojas/laravel-docker-starter/main/setup.bat
+copy .env.example .env
 
 # Run setup
 .\setup.bat
@@ -454,7 +484,8 @@ laravel-docker-starter/
 ├── .env.example                  # Environment variables template
 ├── .gitignore                    # Git ignore rules
 ├── setup.sh                      # Linux/Mac automated setup
-├── setup.bat                     # Windows automated setup
+├── setup.ps1                     # Windows PowerShell automated setup (recommended)
+├── setup.bat                     # Windows CMD automated setup
 ├── Makefile                      # Command shortcuts
 ├── README.md                     # This file
 ├── QUICK_START.md                # Ultra-quick reference guide
@@ -590,14 +621,48 @@ docker-compose up -d
 
 **Error:** `'setup.bat' is not recognized as an internal or external command`
 
-**Solution:** On Windows, you must use `.\setup.bat` (with `.\` prefix)
+**Solution:** On Windows, you must use `.\` prefix to run scripts
+
+**PowerShell (Recommended):**
 ```powershell
+# Correct:
+.\setup.ps1
+
+# Wrong:
+setup.ps1
+```
+
+**CMD:**
+```cmd
 # Correct:
 .\setup.bat
 
 # Wrong:
 setup.bat
 ```
+
+### PowerShell Execution Policy Error
+
+**Error:** `cannot be loaded because running scripts is disabled on this system`
+
+**Solution:** Allow script execution for the current session:
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\setup.ps1
+```
+
+This only affects the current PowerShell session and is safe.
+
+### Encoding Issues with Batch Script
+
+**Error:** Strange characters or "command not recognized" errors when running `setup.bat` from PowerShell
+
+**Solution:** Use the PowerShell script instead:
+```powershell
+.\setup.ps1
+```
+
+The PowerShell script (`setup.ps1`) is native to PowerShell and handles encoding correctly. The batch script (`setup.bat`) is better for CMD.
 
 ### Service "app" is Not Running
 
